@@ -1,7 +1,6 @@
 import React from "react";
 import styled from "styled-components";
 import { auth, provider } from "../firebase";
-import { signInWithPopup } from "firebase/auth";
 
 const Header = () => {
   const handleGoogleAuth = () => {
@@ -46,7 +45,7 @@ const Header = () => {
           <span>SERIES</span>
         </a>
       </NavManu>
-      <Login>Login</Login>
+      <Login onClick={handleGoogleAuth}>Login</Login>
     </Nav>
   );
 };
