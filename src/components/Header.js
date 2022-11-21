@@ -1,17 +1,60 @@
 import React from "react";
 import styled from "styled-components";
 import { auth, provider } from "../firebase";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  setUserLoginDetails,
+  setSignOutState,
+  selectUserName,
+  selectUserphoto,
+} from "../features/userSlice";
+import { useEffect } from "react";
 
 const Header = () => {
+  const dispatch = useDispatch();
+  const history = useNavigate();
+  const userName = useSelector(selectUserName);
+  const userPhoto = useSelector(selectUserphoto);
+
+  useEffect(() => {
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setUser(user);
+        history("/home");
+      }
+    });
+  }, [userName]);
+
   const handleGoogleAuth = () => {
-    auth
-      .signInWithPopup(provider)
-      .then((res) => {
-        console.log(res);
+    if (!userName) {
+      auth
+        .signInWithPopup(provider)
+        .then((result) => {
+          setUser(result.user);
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    } else {
+      auth
+        .signOut()
+        .then(() => {
+          dispatch(setSignOutState());
+          history("/");
+        })
+        .catch((err) => alert(err.message));
+    }
+  };
+
+  const setUser = (user) => {
+    dispatch(
+      setUserLoginDetails({
+        name: user.displayName,
+        email: user.email,
+        photo: user.photoURL,
       })
-      .catch((err) => {
-        alert(err.message);
-      });
+    );
   };
 
   return (
@@ -19,33 +62,44 @@ const Header = () => {
       <Logo>
         <img src="/images/logo.svg" alt="Logo" />
       </Logo>
-      <NavManu>
-        <a href="/home">
-          <img src="/images/home-icon.svg" alt="HOME" />
-          <span>HOME</span>
-        </a>
-        <a>
-          <img src="/images/search-icon.svg" alt="SEARCH" />
-          <span>SEARCH</span>
-        </a>
-        <a>
-          <img src="/images/watchlist-icon.svg" alt="WATCHLIST" />
-          <span>WATCHLIST</span>
-        </a>
-        <a>
-          <img src="/images/original-icon.svg" alt="ORIGINAL" />
-          <span>ORIGINAL</span>
-        </a>
-        <a>
-          <img src="/images/movie-icon.svg" alt="MOVIE" />
-          <span>MOVIE</span>
-        </a>
-        <a>
-          <img src="/images/series-icon.svg" alt="SERIES" />
-          <span>SERIES</span>
-        </a>
-      </NavManu>
-      <Login onClick={handleGoogleAuth}>Login</Login>
+      {!userName ? (
+        <Login onClick={handleGoogleAuth}>Login</Login>
+      ) : (
+        <>
+          <NavManu>
+            <a href="/home">
+              <img src="/images/home-icon.svg" alt="HOME" />
+              <span>HOME</span>
+            </a>
+            <a>
+              <img src="/images/search-icon.svg" alt="SEARCH" />
+              <span>SEARCH</span>
+            </a>
+            <a>
+              <img src="/images/watchlist-icon.svg" alt="WATCHLIST" />
+              <span>WATCHLIST</span>
+            </a>
+            <a>
+              <img src="/images/original-icon.svg" alt="ORIGINAL" />
+              <span>ORIGINAL</span>
+            </a>
+            <a>
+              <img src="/images/movie-icon.svg" alt="MOVIE" />
+              <span>MOVIE</span>
+            </a>
+            <a>
+              <img src="/images/series-icon.svg" alt="SERIES" />
+              <span>SERIES</span>
+            </a>
+          </NavManu>
+          <SignOut>
+            <UserImage src={userPhoto} alt={userName} />
+            <DropDown>
+              <span onClick={handleGoogleAuth}>Sign out</span>
+            </DropDown>
+          </SignOut>
+        </>
+      )}
     </Nav>
   );
 };
@@ -152,4 +206,46 @@ const Login = styled.a`
   }
 `;
 
+const UserImage = styled.img`
+  height: 100%;
+`;
+
+const DropDown = styled.div`
+  position: absolute;
+  top: 48px;
+  right: 0px;
+  background: rgb(19, 19, 19);
+  border: 1px solid rgba(151, 151, 151, 0.34);
+  border-radius: 4px;
+  box-shadow: rgb(0 0 0 / 50%) 0px 0px 18px 0px;
+  padding: 10px;
+  font-size: 14px;
+  letter-spacing: 3px;
+  width: 100px;
+  opacity: 0;
+`;
+
+const SignOut = styled.div`
+  position: relative;
+  height: 48px;
+  width: 48px;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+
+  ${UserImage} {
+    border-radius: 50%;
+    width: 100%;
+    height: 100%;
+  }
+
+  &:hover {
+    ${DropDown} {
+      opacity: 1;
+      transition-duration: 1s;
+    }
+  }
+`;
 export default Header;
