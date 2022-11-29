@@ -4,18 +4,32 @@ import { useParams } from "react-router-dom";
 import db from "../firebase";
 
 const Detail = () => {
-  const id = useParams();
+  const { id } = useParams();
+  const [detailData, setDetailData] = useState({});
+
+  useEffect(() => {
+    db.collection("movies")
+      .doc(id)
+      .get()
+      .then((doc) => {
+        if (doc.exists) {
+          setDetailData(doc.data());
+        } else {
+          console.log("no such document in firebase 🔥");
+        }
+      })
+      .catch((error) => {
+        console.log("Error getting document:", error);
+      });
+  }, [id]);
 
   return (
     <Container>
       <Background>
-        <img
-          src="https://hips.hearstapps.com/hmg-prod/images/lead-image-movie-tv-show-templates2-03-1658936947.jpg"
-          alt="fake-img"
-        />
+        <img src={detailData.backgroundImg} alt={detailData.title} />
       </Background>
       <ImageTitle>
-        <img src="" alt="" />
+        <img img alt={detailData.title} src={detailData.titleImg} />
       </ImageTitle>
       <ContentMeta>
         <Controls>
@@ -37,8 +51,8 @@ const Detail = () => {
             </div>
           </GroupWatch>
         </Controls>
-        <SubTitle>Subtitle</SubTitle>
-        <Description>Description</Description>
+        <SubTitle>{detailData.subTitle}</SubTitle>
+        <Description>{detailData.description}</Description>
       </ContentMeta>
     </Container>
   );
@@ -128,6 +142,78 @@ const Player = styled.button`
     img {
       width: 25px;
     }
+  }
+`;
+
+const Trailer = styled(Player)`
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgb(249, 249, 249);
+  color: rgb(249, 249, 249);
+`;
+
+const AddList = styled.div`
+  margin-right: 16px;
+  height: 44px;
+  width: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 50%;
+  border: 2px solid #fff;
+  cursor: pointer;
+  span {
+    background-color: rgb(249, 249, 249);
+    display: inline-block;
+    &:first-child {
+      height: 2px;
+      transform: translate(1px, 0px) rotate(0deg);
+      width: 16px;
+    }
+    &:nth-child(2) {
+      height: 16px;
+      transform: translateX(-8px) rotate(0deg);
+      width: 2px;
+    }
+  }
+`;
+
+const GroupWatch = styled.div`
+  height: 44px;
+  width: 44px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  background: #fff;
+  div {
+    height: 40px;
+    width: 40px;
+    background: #000;
+    border-radius: 50%;
+    img {
+      width: 100%;
+    }
+  }
+`;
+
+const SubTitle = styled.div`
+  color: rgb(249, 249, 249);
+  font-size: 15px;
+  min-height: 20px;
+  @media (max-width: 768px) {
+    font-size: 12px;
+  }
+`;
+
+const Description = styled.div`
+  line-height: 1.4;
+  font-size: 20px;
+  padding: 16px 0;
+  color: rgb(249, 249, 249);
+  @media (max-width: 768px) {
+    font-size: 14px;
   }
 `;
 export default Detail;
